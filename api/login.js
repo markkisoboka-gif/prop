@@ -26,10 +26,11 @@ export default async function handler(req, res) {
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  const submitted = (body && body.password) || '';
+  const submitted = ((body && body.password) || '').trim();
+  const expected = OWNER_PASSWORD.trim();
 
   const a = Buffer.from(submitted);
-  const b = Buffer.from(OWNER_PASSWORD);
+  const b = Buffer.from(expected);
   const match = a.length === b.length && crypto.timingSafeEqual(a, b);
 
   if (!match) {
