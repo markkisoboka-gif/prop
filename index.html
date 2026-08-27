@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>   
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Proportional — Trading Platform</title>
@@ -382,16 +382,24 @@ async function save(){
 }
 
 async function login(password){
-  const res = await fetch('/api/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password })
-  });
-  if(!res.ok) return false;
-  const data = await res.json();
-  ownerToken = data.token;
-  sessionStorage.setItem('ownerToken', ownerToken);
-  return true;
+  try{
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    if(!res.ok){
+      let detail = 'HTTP ' + res.status;
+      try{ const errBody = await res.json(); if(errBody.error) detail = errBody.error; }catch(e){}
+      return { ok:false, reason: detail };
+    }
+    const data = await res.json();
+    ownerToken = data.token;
+    sessionStorage.setItem('ownerToken', ownerToken);
+    return { ok:true };
+  }catch(err){
+    return { ok:false, reason: 'Network/connection error: ' + err.message };
+  }
 }
 function logOut(){
   ownerToken = null;
@@ -429,9 +437,9 @@ async function submitAuth(){
   const pw = document.getElementById('authPasswordInput').value;
   const errEl = document.getElementById('authError');
   errEl.style.display = 'none';
-  const ok = await login(pw);
-  if(!ok){
-    errEl.textContent = 'Incorrect password.';
+  const result = await login(pw);
+  if(!result.ok){
+    errEl.textContent = 'Sign-in failed: ' + result.reason;
     errEl.style.display = 'block';
     return;
   }
